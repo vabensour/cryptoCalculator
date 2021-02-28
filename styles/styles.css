@@ -1,0 +1,38 @@
+h2 {
+    margin: 40px 0px 20px 0px;
+    font-size: 20px;
+}
+
+h3 {
+    margin: 20px 0px 10px 0px;
+    font-size: 16px;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.header {
+    margin-top: 50px;
+}
+.custom-alert {
+    margin-top: 20px;
+}
+
+.badge:not(.badge-light) {
+    padding: 8px 15px;
+    margin: 0px 5px 5px 0px;
+}
+
+.remaing-credit {
+    margin-left: 25px;
+}
+
+.detail-calculate {
+    display: none;
+    font-size: 12px;
+}
+
+.container-btn {
+    margin: 20px 0px 50px 0px;
+}
