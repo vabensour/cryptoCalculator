@@ -31,11 +31,15 @@ function calculate($data) {
     for ($i = 0; $i < count($data); $i++) {
         $transaction = $data[$i];
         $pair = $brokerPairToApiPair[$transaction['pair']];
+        $isFiatPair = strpos($transaction['pair'], 'EUR') !== false;
 
         if ($transaction['type'] == 'buy') {
-            // Save previous cashIn & new cashIn
             $oldCashIn = $cashIn;
-            $cashIn +=  $transaction['cost'];
+
+            if ($isFiatPair) {
+                // Save previous cashIn & new cashIn
+                $cashIn +=  $transaction['cost'];
+            }
 
             // Update volume bought in walletVolume
             $walletVolume = updateWalletVolume($walletVolume, $transaction);
@@ -56,41 +60,56 @@ function calculate($data) {
             $cashOut = $transaction['cost'];
             $before = $timeTransaction + 150;
             $after = $timeTransaction - 150;
+            $oldCashIn = $cashIn;
 
-            // Get price of complete wallet for specific date
-            $walletPrice = getWalletPriceAtDate($walletVolume, $before, $after);
+            // If fiat pair, we must calcultate plus-value
+            if ($isFiatPair) {
+                // Get price of complete wallet for specific date
+                $walletPrice = getWalletPriceAtDate($walletVolume, $before, $after);
+                
+                if ($walletPrice == 0) {
+                    echo 'WalletPrice = 0 : ' . $pair;
+                    exit;
+                }
 
-            // Here, we update volume after calculate walletPrice. We don't must execute it beofre getWalletPriceAtDate to not falsify calcul
-            $walletVolume = updateWalletVolume($walletVolume, $transaction);
+                // Make calcul of percentage 
+                $walletPercent = $cashOut / $walletPrice;
+                $plusValue = $cashOut - ($cashIn * $walletPercent);
+                $plusValueTotal +=  $plusValue;
 
-            if ($walletPrice == 0) {
-                echo 'WalletPrice = 0 : ' . $pair;
-                exit;
+                // Save previous cashIn & new cashIn
+                $cashIn = $cashIn * $walletPercent;
+
+                // Save resume transaction to display results
+                $saveTransaction = array(
+                    'type' => $transaction['type'],
+                    'pair' => $pair,
+                    'cost' => $transaction['cost'],
+                    'oldCashIn' => $oldCashIn,
+                    'cashIn' => $cashIn,
+                    'plusValue' => $plusValue,
+                    'detail' => array(
+                        'cashOut' => $cashOut,
+                        'walletPrice' => $walletPrice,
+                        'walletPercent' => $walletPercent
+                    )
+                );
+            } else {
+                // Save resume transaction to display results
+                $saveTransaction = array(
+                    'type' => $transaction['type'],
+                    'pair' => $pair,
+                    'cost' => $transaction['cost'],
+                    'oldCashIn' => $oldCashIn,
+                    'cashIn' => $cashIn,
+                    'plusValue' => 0,
+                    'detail' => array()
+                );
             }
 
-            // Make calcul of percentage 
-            $walletPercent = $cashOut / $walletPrice;
-            $plusValue = $cashOut - ($cashIn * $walletPercent);
-            $plusValueTotal +=  $plusValue;
+            // Here, we update volume after calculate walletPrice (if fiat pair). We don't must execute it beofre getWalletPriceAtDate to not falsify calcul
+            $walletVolume = updateWalletVolume($walletVolume, $transaction);
 
-            // Save previous cashIn & new cashIn
-            $oldCashIn = $cashIn;
-            $cashIn = $cashIn * $walletPercent;
-
-            // Save resume transaction to display results
-            $saveTransaction = array(
-                'type' => $transaction['type'],
-                'pair' => $pair,
-                'cost' => $transaction['cost'],
-                'oldCashIn' => $oldCashIn,
-                'cashIn' => $cashIn,
-                'plusValue' => $plusValue,
-                'detail' => array(
-                    'cashOut' => $cashOut,
-                    'walletPrice' => $walletPrice,
-                    'walletPercent' => $walletPercent
-                )
-            );
             array_push($response['transaction'], $saveTransaction);
         }
     }

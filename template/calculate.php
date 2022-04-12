@@ -62,7 +62,7 @@ if ($result['success']) {
                 echo '</tr>';
 
                 // If transaction is sell, add line with details of calcul
-                if ($typeTransaction == 'sell') {
+                if ($typeTransaction == 'sell' && $transaction['detail']) {
                     $oldCashIn = round($transaction['oldCashIn'], 2);
                     $cashOut = round($transaction['detail']['cashOut'], 2);
                     $walletPrice = round($transaction['detail']['walletPrice'], 2);

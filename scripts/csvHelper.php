@@ -40,11 +40,7 @@ function getFormattedDataFromRawData($rawData, $typeBroker) {
             'volume' => $rawData[$i][$indexVolume]
         );
         
-        // Verify pair contains actual currency (Euro)
-        if (strpos($newEntry['pair'], 'EUR') !== false) {
-            array_push($formattedData, $newEntry);
-        }
-       
+        array_push($formattedData, $newEntry);
     }
     
     return $formattedData;
